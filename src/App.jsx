@@ -1,26 +1,27 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-
+import Predictor from "./pages/Predictor";
+import Comparison from "./pages/Comparison";
 import RiskFactors from "./pages/RiskFactors";
 import Resources from "./pages/Resources";
 import Contact from "./pages/Contact";
-import MentalHealthForm from "./pages/MentalHealthForm";
-// import CombinedMentalHealthForm from "./pages/Predictor";
-import Map from "./pages/Comparison";
+import MainLayout from "./pages/Main_Layout";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Home Route */}
         <Route path="/" element={<Home />} />
-        <Route path="/predictor" element={<MentalHealthForm />} />
-        <Route path="/comparison" element={<Map />} />
-        <Route path="/risk-factors" element={<RiskFactors />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/contact" element={<Contact />} />
-        {/* <Route path="/mental-health-form" element={<MentalHealthForm />} /> */}
-        {/* Add more routes as needed */}
+
+        {/* Sidebar Layout Routes */}
+        <Route element={<MainLayout />}>
+          <Route path="/predictor" element={<Predictor />} />
+          <Route path="/comparison" element={<Comparison />} />
+          <Route path="/risk-factors" element={<RiskFactors />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/contact" element={<Contact />} />
+        </Route>
       </Routes>
     </Router>
   );
