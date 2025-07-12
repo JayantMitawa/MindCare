@@ -80,7 +80,7 @@ const StarRating = ({ score }) => {
   return <div className="flex gap-1">{stars}</div>;
 };
 
-// ✅ Scoring logic
+// Function to calculate mental health rating based on form data
 function calculateRating(data) {
   let score = 0;
 
@@ -113,6 +113,7 @@ function calculateRating(data) {
     "Corporate": 0.8,
     "Student": 0.2,
     "Others": 0.5,
+    "House wife": 0.3,
   };
 
   const workInterestMap = {
