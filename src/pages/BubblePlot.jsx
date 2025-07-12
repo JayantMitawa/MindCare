@@ -14,15 +14,16 @@ const BubblePlot = () => {
       complete: (results) => {
         const rawData = results.data;
 
-        // Create a map to count occurrences of each (income, score) pair
+        // Create a map to count occurrences of each (income_bucket, score) pair
         const countMap = new Map();
 
         rawData.forEach((row) => {
-          const income = parseInt(row.income);
-          const score = parseFloat(row.score);
+          const incomeRaw = parseInt(row.income);
+          const score = parseFloat(row.score); // Ensure column name matches exactly
 
-          if (!isNaN(income) && !isNaN(score)) {
-            const key = `${income}-${score}`;
+          if (!isNaN(incomeRaw) && !isNaN(score)) {
+            const incomeBucket = Math.floor(incomeRaw / 100) * 100;
+            const key = `${incomeBucket}-${score.toFixed(1)}`; // toFixed to reduce float errors
             countMap.set(key, (countMap.get(key) || 0) + 1);
           }
         });
@@ -30,15 +31,34 @@ const BubblePlot = () => {
         const x = [];
         const y = [];
         const size = [];
+        const text = [];
 
         countMap.forEach((count, key) => {
           const [income, score] = key.split("-").map(Number);
           x.push(income);
           y.push(score);
           size.push(count * 5); // scale bubble size
+          text.push(`Income: ${income}<br>Score: ${score}<br>Count: ${count}`);
         });
 
-        setData([{ x, y, mode: "markers", marker: { size, color: size, colorscale: 'Viridis' }, type: "scatter" }]);
+        setData([
+          {
+            x,
+            y,
+            text,
+            mode: "markers",
+            marker: {
+              size,
+              color: size,
+              colorscale: "Viridis",
+              showscale: true,
+              sizemode: "area",
+              sizeref: 2.0 * Math.max(...size) / (100 ** 2), // adjust this for better scaling
+              sizemin: 4,
+            },
+            type: "scatter",
+          },
+        ]);
       },
     });
   }, []);
@@ -50,11 +70,12 @@ const BubblePlot = () => {
         data={data}
         layout={{
           title: "Bubble Plot of Mental Health Ratings vs Income",
-          xaxis: { title: "Income" },
-          yaxis: { title: "Score" },
+          xaxis: { title: "Income (bucketed by 100)", zeroline: false },
+          yaxis: { title: "Score (0–10)", zeroline: false },
           showlegend: false,
           height: 600,
           width: 900,
+          hovermode: "closest",
         }}
       />
     </div>
