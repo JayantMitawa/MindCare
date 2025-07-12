@@ -8,7 +8,7 @@ const BubblePlot = () => {
 
   useEffect(() => {
     // Load CSV from public folder
-    Papa.parse("/data_trimmmed.csv", {
+    Papa.parse("data_trimmmed.csv", {
       download: true,
       header: true,
       complete: (results) => {
