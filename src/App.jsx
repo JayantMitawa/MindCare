@@ -8,6 +8,7 @@ import Contact from "./pages/Contact";
 import MainLayout from "./pages/Main_Layout";
 import BoxPlotChart from "./pages/BoxPlotChart";
 import BubblePlot from "./pages/BubblePlot";
+import Map from "./pages/Map";
 
 function App() {
   return (
@@ -19,9 +20,9 @@ function App() {
         {/* Sidebar Layout Routes */}
         <Route element={<MainLayout />}> 
           <Route path="/predictor" element={<Predictor />} />
-          <Route path="/comparison" element={<BoxPlotChart />} />
-          <Route path="/risk-factors" element={<BubblePlot />} />
-          <Route path="/resources" element={<Resources />} />
+          <Route path="/comparison" element={<Map />} />
+          <Route path="/risk-factors" element={<BoxPlotChart />} />
+          <Route path="/resources" element={<BubblePlot />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
       </Routes>
