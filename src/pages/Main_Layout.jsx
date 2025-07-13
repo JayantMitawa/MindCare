@@ -9,15 +9,17 @@ import {
   FaCircle,
   FaBars,
   FaChevronLeft,
+  FaProjectDiagram,
 } from "react-icons/fa";
 
 const navItems = [
   { label: "Predictor", path: "/predictor", icon: <FaBrain /> },
-  { label: "Country-Comparison", path: "/country-comparison", icon: <FaGlobe /> },
-  { label: "Bubble-Plot", path: "/bubble-plot", icon: <FaCircle /> },
-  { label: "3D-Bubble-Plot", path: "/3d-bubble-plot", icon: <FaCubes /> },
-  { label: "Trend-Analysis", path: "/trend-analysis", icon: <FaChartLine /> },
+  { label: "Country Comparison", path: "/country-comparison", icon: <FaGlobe /> },
+  { label: "Bubble Plot", path: "/bubble-plot", icon: <FaCircle /> },
+  { label: "3D Bubble Plot", path: "/3d-bubble-plot", icon: <FaCubes /> },
+  { label: "Trend Analysis", path: "/trend-analysis", icon: <FaChartLine /> },
   { label: "Violin plot", path: "/violin-plot", icon: <FaChartBar /> },
+  { label: "Parallel plot", path: "/parallel-plot", icon: <FaProjectDiagram /> },
 ];
 
 const MainLayout = () => {

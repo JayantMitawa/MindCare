@@ -10,6 +10,7 @@ import BubblePlot from "./pages/BubblePlot";
 import Map from "./pages/Comparison";
 import MentalHealth3DPlot from "./pages/MentalHealth3DPlot";
 import MentalHealthDashboard from "./pages/MentalHealthDashboard";
+import ParallelPlot from "./pages/ParallelPlot";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/bubble-plot" element={<BubblePlot />} />
           <Route path="/3d-bubble-plot" element={<MentalHealth3DPlot />} />
           <Route path="/trend-analysis" element={<MentalHealthDashboard />} />
+          <Route path="/parallel-plot" element={<ParallelPlot/>}/>
         </Route>
       </Routes>
     </Router>

@@ -140,6 +140,7 @@ import {
   FaCubes,
   FaChartBar,
   FaChartLine,
+  FaProjectDiagram,
 } from "react-icons/fa";
 
 const Home = () => {
@@ -184,7 +185,14 @@ const Home = () => {
       path: "/trend-analysis",
       icon: <FaChartLine className="text-3xl" />,
       description:
-        "Explore patterns and trends in mental health data over time.",
+        "Explore patterns and trends in mental health data over income.",
+    },
+    {
+      label: "Parallel Plot",
+      path: "/parallel-plot",
+      icon: <FaProjectDiagram className="text-3xl" />,
+      description:
+        "Explore patterns and trends in mental health data over different attributes.",
     },
   ];
 
