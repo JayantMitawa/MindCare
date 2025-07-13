@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
 import Plot from "react-plotly.js";
 
 const occupationMapping = {
@@ -14,60 +13,83 @@ const BoxPlotChart = () => {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
-    fetch("/ratings2.csv")
-      .then((res) => res.text())
-      .then((text) => {
-        const parsed = Papa.parse(text, {
-          header: true,
-          skipEmptyLines: true,
-        });
-
-        const rows = parsed.data;
-
-        // Group scores by mapped occupation
+    fetch("http://localhost:5051/api/ratings")
+      .then((res) => res.json())
+      .then((rows) => {
+        // Group scores by occupation AND gender
         const grouped = {};
+        const genders = ["Male", "Female"]; // Assuming these are the string values in your 'gender' field
 
         rows.forEach((row) => {
-          const occStr = row["Occupation"]?.trim();
-          const scoreStr = row["Ratings"]?.trim();
+          const occNum = parseFloat(row.occupation);
+          const occupation = occupationMapping[occNum];
+          const score = parseFloat(row.ratings);
+          const gender = row.gender?.trim();
 
           if (
-            occStr !== undefined &&
-            occStr !== "" &&
-            scoreStr !== undefined &&
-            scoreStr !== "" &&
-            !isNaN(occStr) &&
-            !isNaN(scoreStr)
+            !isNaN(occNum) &&
+            !isNaN(score) &&
+            occupation &&
+            genders.includes(gender)
           ) {
-            const occNum = parseFloat(occStr);
-            const occupation = occupationMapping[occNum];
-
-            if (occupation) {
-              const score = parseFloat(scoreStr);
-              if (!grouped[occupation]) {
-                grouped[occupation] = [];
-              }
-              grouped[occupation].push(score);
+            if (!grouped[occupation]) {
+              grouped[occupation] = { Male: [], Female: [] };
             }
+            grouped[occupation][gender].push(score);
           }
         });
 
-        // Prepare traces for Plotly
         const occupations = Object.values(occupationMapping);
+        const traces = [];
+        let maleLegendShown = false;
+        let femaleLegendShown = false;
 
-        const traces = occupations.map((occ) => ({
-          y: grouped[occ] || [],
-          name: occ,
-          type: "violin",
-          points: false,                // ❌ hide individual scatter points
-          box: { visible: true },       // ✅ show box inside violin
-          meanline: { visible: true },  // ✅ show mean line
-          scalemode: "count",
-          width: 0.7,                   // ✅ make violins wider horizontally
-          line: { width: 1 },
-        }));
+        occupations.forEach((occ) => {
+          // Male Trace (left side)
+          traces.push({
+            type: "violin",
+            name: "Male",
+            legendgroup: "Male",
+            showlegend: !maleLegendShown,
+            x: Array(grouped[occ]?.Male.length || 0).fill(occ),
+            y: grouped[occ]?.Male || [],
+            orientation: "v",
+            points: false,
+            box: { visible: true },
+            meanline: { visible: true },
+            side: "negative", // left half of split violin
+            scalemode: "count",
+            width: 0.6,
+            line: { width: 1, color: "rgb(56, 118, 189)" },
+            fillcolor: "rgba(56, 118, 189, 0.6)",
+          });
+          if (!maleLegendShown) maleLegendShown = true;
+
+          // Female Trace (right side)
+          traces.push({
+            type: "violin",
+            name: "Female",
+            legendgroup: "Female",
+            showlegend: !femaleLegendShown,
+            x: Array(grouped[occ]?.Female.length || 0).fill(occ),
+            y: grouped[occ]?.Female || [],
+            orientation: "v",
+            points: false,
+            box: { visible: true },
+            meanline: { visible: true },
+            side: "positive", // right half of split violin
+            scalemode: "count",
+            width: 0.6,
+            line: { width: 1, color: "rgb(230, 85, 13)" },
+            fillcolor: "rgba(230, 85, 13, 0.6)",
+          });
+          if (!femaleLegendShown) femaleLegendShown = true;
+        });
 
         setChartData(traces);
+      })
+      .catch((error) => {
+        console.error("Failed to load data from backend:", error);
       });
   }, []);
 
@@ -75,18 +97,21 @@ const BoxPlotChart = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-50 p-8">
       <div className="w-full max-w-5xl bg-white p-8 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-6 text-center">
-          Mental Health Score by Occupation
+          Mental Health Score by Occupation and Gender
         </h2>
 
         {chartData ? (
           <Plot
             data={chartData}
             layout={{
-              title: "Mental Health Ratings vs Occupation",
+              title: "Mental Health Ratings by Occupation and Gender",
+              xaxis: { title: "Occupation" },
               yaxis: { title: "Score (0-10)", range: [0, 10] },
               violinmode: "group",
               margin: { t: 50, l: 50, r: 50, b: 100 },
               autosize: true,
+              showlegend: true,
+              legend: { x: 1.05, y: 1, xanchor: "left" },
             }}
             style={{ width: "100%", height: "600px" }}
             config={{ responsive: true }}

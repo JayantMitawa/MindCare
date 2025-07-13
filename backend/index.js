@@ -12,7 +12,7 @@ const compression  = require("compression");
 const Rating = require("./models/Rating");
 
 const app  = express();
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT || 5051;
 
 // Middleware
 app.use(cors());
@@ -29,20 +29,27 @@ mongoose.connect(process.env.MONGODB_URI)
 Rating.collection.createIndex({ Rating: 1 });
 
 (async () => {
-  const allDocs = await Rating.find({ Rating: { $type: "number" } }).select("Rating Country -_id");
+  const allDocs = await Rating.find().select("score Score rating Rating Country");
 
-  globalScores = allDocs.map(r => r.Rating);
+  // Try every possible key for rating
+  globalScores = allDocs
+    .map(r => parseFloat(r.Rating || r.rating || r.Score || r.score))
+    .filter(val => !isNaN(val));
 
-  // Build country → [ratings[]] map
   countryIndex = {};
+
   for (const doc of allDocs) {
-    const country = doc.Country;
-    if (!countryIndex[country]) countryIndex[country] = [];
-    countryIndex[country].push(doc.Rating);
+    const country = doc.Country || doc.country || "Unknown";
+    const value = parseFloat(doc.Rating || doc.rating || doc.Score || doc.score);
+    if (!isNaN(value)) {
+      if (!countryIndex[country]) countryIndex[country] = [];
+      countryIndex[country].push(value);
+    }
   }
 
   console.log(`⚡ Cached ${globalScores.length} ratings into memory`);
 })();
+
 
   })
   .catch(err => {
@@ -56,20 +63,18 @@ app.get("/api/message", (req, res) => {
 });
 
 // 2. Paginated ratings
+// 2. Return every CSV field, unmodified
 app.get("/api/ratings", async (req, res) => {
-  const limit = parseInt(req.query.limit) || 1000;
-  const skip  = parseInt(req.query.skip) || 0;
-
   try {
-    const ratings = await Rating.find({})
-      .skip(skip)
-      .limit(limit)
-      .select("Country Year Rating");
-    res.json(ratings);
+    // .lean() makes this faster and removes mongoose wrappers
+    const all = await Rating.find({}).lean();
+    res.json(all);
   } catch (err) {
+    console.error("❌ /api/ratings error:", err);
     res.status(500).json({ error: "Failed to fetch ratings." });
   }
 });
+
 
 // 3. Cached country averages
 let averageCache = null;

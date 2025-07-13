@@ -99,7 +99,7 @@ export default function Predictor() {
   };
 
   const handleSubmit = () => {
-    fetch("http://localhost:5050/api/predict", {
+    fetch("http://localhost:5051/api/predict", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(formData),

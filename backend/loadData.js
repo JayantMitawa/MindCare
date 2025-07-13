@@ -1,76 +1,118 @@
+// // backend/loadData.js
+// require("dotenv").config();
+// const fs = require("fs");
+// const csv = require("csv-parser");
+// const mongoose = require("mongoose");
+// const Rating = require("./models/Rating");
+
+// async function main() {
+//   await mongoose.connect(process.env.MONGODB_URI);
+//   console.log("✅ Connected to MongoDB");
+
+//   // 1. Clear existing ratings
+//   await Rating.deleteMany({});
+//   console.log("🗑 Cleared existing ratings");
+
+//   // 2. Read full CSV with exact headers
+//   const rows = [];
+//   let headers = [];
+
+//   fs.createReadStream("ratings.csv") // Make sure this is the latest CSV
+//     .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
+//     .on("headers", (h) => {
+//       headers = h;
+//       console.log("🔖 Detected headers:", headers);
+//     })
+//     .on("data", (row) => {
+//       const doc = {};
+
+//       // Copy every field exactly as-is from CSV
+//       headers.forEach((key) => {
+//         doc[key] = row[key]?.trim?.() ?? row[key];
+//       });
+
+//       rows.push(doc);
+//     })
+//     .on("end", async () => {
+//       console.log(`🗂 ${rows.length} rows to import`);
+
+//       if (rows.length > 0) {
+//         try {
+//           await Rating.insertMany(rows, { ordered: false });
+//           console.log(`✅ Imported ${rows.length} rows into MongoDB`);
+//         } catch (err) {
+//           console.error("❌ Insert error:", err);
+//         }
+//       } else {
+//         console.warn("⚠️ No rows imported — CSV may be empty or corrupted");
+//       }
+
+//       mongoose.disconnect();
+//     })
+//     .on("error", (err) => {
+//       console.error("❌ CSV read error:", err);
+//     });
+// }
+
+// main().catch((err) => {
+//   console.error("❌ Import script error:", err);
+//   process.exit(1);
+// });
 // backend/loadData.js
 require("dotenv").config();
-const fs       = require("fs");
-const csv      = require("csv-parser");
+const fs = require("fs");
+const csv = require("csv-parser");
 const mongoose = require("mongoose");
-const Rating   = require("./models/Rating");
+const Rating = require("./models/Rating");
+
+const BATCH_SIZE = 1000;
 
 async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log("✅ Connected to MongoDB");
 
-  // 1. Clear existing
   await Rating.deleteMany({});
   console.log("🗑 Cleared existing ratings");
 
-  // 2. Read & filter CSV rows
-  const rows = [];
-  let headers;
+  let batch = [];
+  let headers = [];
 
-  fs.createReadStream("ratings.csv")  // or "ratings2.csv"—use whichever has your data
+  const stream = fs.createReadStream("dataset.csv")
     .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
     .on("headers", (h) => {
       headers = h;
       console.log("🔖 Detected headers:", headers);
     })
-    .on("data", (row) => {
-      // Find keys (case-insensitive)
-      const findKey = name =>
-        headers.find(h => h.toLowerCase() === name.toLowerCase());
+    .on("data", async (row) => {
+      const doc = {};
+      headers.forEach((key) => {
+        doc[key] = row[key]?.trim?.() ?? row[key];
+      });
 
-      const tsKey    = findKey("Timestamp");
-      const scoreKey = findKey("Score");
-      const countryKey = findKey("Country");
-      const famHistKey = findKey("family_history");
-      // You can add more fields if your model uses them
+      batch.push(doc);
 
-      // Derive Year from Timestamp
-      let yearVal = null;
-      if (tsKey && row[tsKey]) {
-        const d = new Date(row[tsKey]);
-        if (!isNaN(d)) {
-          yearVal = String(d.getFullYear());
+      if (batch.length >= BATCH_SIZE) {
+        stream.pause(); // pause until insert is done
+        try {
+          await Rating.insertMany(batch, { ordered: false });
+        } catch (err) {
+          console.error("❌ Batch insert error:", err.message);
         }
+        console.log(`✅ Inserted ${batch.length} rows`);
+        batch = [];
+        stream.resume();
       }
-
-      const ratingVal = scoreKey ? parseFloat(row[scoreKey]) : NaN;
-
-      // Skip rows missing a valid year or score
-      if (!yearVal || isNaN(ratingVal)) {
-        return;
-      }
-
-      // Build document
-      const doc = {
-        Country:        row[countryKey]?.trim(),
-        Year:           yearVal,
-        Rating:         ratingVal,
-      };
-
-      // Optional extra fields
-      if (famHistKey) doc.family_history = row[famHistKey].trim();
-
-      rows.push(doc);
     })
     .on("end", async () => {
-      console.log(`🗂 ${rows.length} valid rows to import`);
-
-      if (rows.length > 0) {
-        await Rating.insertMany(rows, { ordered: false });
-        console.log(`✅ Imported ${rows.length} rows into MongoDB`);
-      } else {
-        console.warn("⚠️ No rows imported — check your CSV headers & content");
+      if (batch.length > 0) {
+        try {
+          await Rating.insertMany(batch, { ordered: false });
+          console.log(`✅ Inserted final ${batch.length} rows`);
+        } catch (err) {
+          console.error("❌ Final batch error:", err.message);
+        }
       }
+      console.log("🏁 Import completed.");
       mongoose.disconnect();
     })
     .on("error", (err) => {
@@ -78,7 +120,7 @@ async function main() {
     });
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error("❌ Import script error:", err);
   process.exit(1);
 });
