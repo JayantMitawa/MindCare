@@ -9,6 +9,7 @@ import BoxPlotChart from "./pages/BoxPlotChart";
 import BubblePlot from "./pages/BubblePlot";
 import Map from "./pages/Comparison";
 import MentalHealth3DPlot from "./pages/MentalHealth3DPlot";
+import MentalHealthDashboard from "./pages/MentalHealthDashboard";
 
 function App() {
   return (
@@ -20,10 +21,11 @@ function App() {
         {/* Sidebar Layout Routes */}
         <Route element={<MainLayout />}> 
           <Route path="/predictor" element={<Predictor />} />
-          <Route path="/comparison" element={<Map/>} />
-          <Route path="/risk-factors" element={<BoxPlotChart />} />
-          <Route path="/resources" element={<BubblePlot />} />
-          <Route path="/contact" element={<MentalHealth3DPlot />} />
+          <Route path="/country-comparison" element={<Map/>} />
+          <Route path="/violin-plot" element={<BoxPlotChart />} />
+          <Route path="/bubble-plot" element={<BubblePlot />} />
+          <Route path="/3d-bubble-plot" element={<MentalHealth3DPlot />} />
+          <Route path="/trend-analysis" element={<MentalHealthDashboard />} />
         </Route>
       </Routes>
     </Router>
