@@ -424,7 +424,7 @@ mongoose
       const allDocs = await Rating.find().select("score Score rating Rating Country");
 
       globalScores = allDocs
-        .map((r) => parseFloat( r.score))
+        .map((r) => parseFloat( r.ratings))
         .filter((val) => !isNaN(val));
 
       countryIndex = {};
